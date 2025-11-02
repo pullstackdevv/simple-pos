@@ -1,0 +1,164 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout>
+	<div class="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
+		<div class="w-full max-w-md">
+			<div class="bg-white rounded-lg shadow-lg p-8">
+				<div class="text-center mb-8">
+					<h1 class="text-3xl font-bold text-gray-900 mb-2">☕ Simple POS</h1>
+					<p class="text-gray-600">STRUK PEMBAYARAN</p>
+				</div>
+
+				<div id="receipt-content" class="space-y-4">
+					<!-- Receipt will be populated by JavaScript -->
+				</div>
+
+				<div class="mt-8 border-t pt-4 flex gap-2">
+					<button
+						id="print-btn"
+						class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded-lg transition-colors"
+					>
+						🖨️ Cetak
+					</button>
+					<button
+						id="new-transaction-btn"
+						class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg transition-colors"
+					>
+						➕ Transaksi Baru
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	interface ReceiptData {
+		items: Array<{ name: string; price: number; quantity: number }>;
+		subtotal: number;
+		tax: number;
+		total: number;
+		timestamp: string;
+	}
+
+	const loadReceipt = () => {
+		const receiptData = localStorage.getItem('pos-receipt');
+
+		if (!receiptData) {
+			window.location.href = '/';
+			return;
+		}
+
+		const receipt: ReceiptData = JSON.parse(receiptData);
+		const receiptContent = document.getElementById('receipt-content') as HTMLElement;
+
+		const date = new Date(receipt.timestamp);
+		const dateStr = date.toLocaleDateString('id-ID', {
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+		});
+
+		let html = `
+      <div class="text-sm text-gray-600 text-center mb-4">
+        <p>${dateStr}</p>
+      </div>
+
+      <div class="border-t border-b py-4 space-y-2">
+    `;
+
+		receipt.items.forEach((item) => {
+			html += `
+        <div class="flex justify-between text-sm">
+          <div>
+            <p class="font-semibold text-gray-800">${item.name}</p>
+            <p class="text-gray-600">${item.quantity}x Rp ${item.price.toLocaleString('id-ID')}</p>
+          </div>
+          <p class="font-semibold text-gray-800">Rp ${(item.price * item.quantity).toLocaleString('id-ID')}</p>
+        </div>
+      `;
+		});
+
+		html += `
+      </div>
+
+      <div class="space-y-2 text-sm mt-4">
+        <div class="flex justify-between text-gray-700">
+          <span>Subtotal:</span>
+          <span>Rp ${receipt.subtotal.toLocaleString('id-ID')}</span>
+        </div>
+        <div class="flex justify-between text-gray-700">
+          <span>Pajak (10%):</span>
+          <span>Rp ${receipt.tax.toLocaleString('id-ID')}</span>
+        </div>
+        <div class="flex justify-between text-lg font-bold text-gray-900 border-t pt-2">
+          <span>TOTAL:</span>
+          <span>Rp ${receipt.total.toLocaleString('id-ID')}</span>
+        </div>
+      </div>
+
+      <div class="text-center mt-6 text-gray-600 text-xs">
+        <p>Terima kasih telah berbelanja!</p>
+        <p>Selamat datang kembali</p>
+      </div>
+    `;
+
+		receiptContent.innerHTML = html;
+	};
+
+	// Print functionality
+	const printBtn = document.getElementById('print-btn');
+	if (printBtn) {
+		printBtn.addEventListener('click', () => {
+			window.print();
+		});
+	}
+
+	// New transaction
+	const newTransactionBtn = document.getElementById('new-transaction-btn');
+	if (newTransactionBtn) {
+		newTransactionBtn.addEventListener('click', () => {
+			localStorage.removeItem('pos-receipt');
+			localStorage.removeItem('pos-cart');
+			window.location.href = '/';
+		});
+	}
+
+	// Load receipt on page load
+	loadReceipt();
+</script>
+
+<style>
+	@media print {
+		body {
+			background: white;
+		}
+
+		.min-h-screen {
+			background: white;
+			padding: 0;
+		}
+
+		.w-full {
+			width: 100%;
+		}
+
+		.max-w-md {
+			max-width: 100%;
+		}
+
+		.bg-white {
+			box-shadow: none;
+			border: none;
+		}
+
+		#print-btn,
+		#new-transaction-btn {
+			display: none;
+		}
+	}
+</style>

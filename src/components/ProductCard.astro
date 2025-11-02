@@ -1,0 +1,45 @@
+---
+import type { Product } from '../data/products';
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(price);
+};
+---
+
+<button
+  class="product-card bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 cursor-pointer border border-gray-200 hover:border-blue-400"
+  data-product-id={product.id}
+  data-product-name={product.name}
+  data-product-price={product.price}
+>
+  <div class="text-4xl mb-3">{product.image}</div>
+  <h3 class="font-semibold text-gray-800 text-sm mb-2">{product.name}</h3>
+  <p class="text-blue-600 font-bold text-lg">{formatPrice(product.price)}</p>
+</button>
+
+<script>
+  document.querySelectorAll('.product-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const productId = card.getAttribute('data-product-id');
+      const productName = card.getAttribute('data-product-name');
+      const productPrice = parseFloat(card.getAttribute('data-product-price') || '0');
+
+      // Dispatch custom event to add to cart
+      window.dispatchEvent(
+        new CustomEvent('addToCart', {
+          detail: { id: productId, name: productName, price: productPrice },
+        })
+      );
+    });
+  });
+</script>

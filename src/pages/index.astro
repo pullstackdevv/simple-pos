@@ -1,11 +1,78 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import ProductCard from '../components/ProductCard.astro';
+import Cart from '../components/Cart.astro';
+import { products, categories } from '../data/products';
 ---
 
 <Layout>
-	<Welcome />
+	<div class="min-h-screen bg-gray-100 p-4">
+		<div class="max-w-7xl mx-auto">
+			<!-- Header -->
+			<div class="mb-8">
+				<h1 class="text-4xl font-bold text-gray-900 mb-2">☕ Simple POS</h1>
+				<p class="text-gray-600">Sistem Kasir Sederhana</p>
+			</div>
+
+			<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+				<!-- Products Section -->
+				<div class="lg:col-span-2">
+					<!-- Category Filter -->
+					<div class="mb-6 flex gap-2 overflow-x-auto pb-2">
+						{categories.map((cat) => (
+							<button
+								class={`category-filter px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+									cat === 'All'
+										? 'bg-blue-500 text-white'
+										: 'bg-white text-gray-700 hover:bg-gray-100'
+								}`}
+								data-category={cat}
+							>
+								{cat}
+							</button>
+						))}
+					</div>
+
+					<!-- Products Grid -->
+					<div class="products-grid grid grid-cols-2 sm:grid-cols-3 gap-4">
+						{products.map((product) => (
+							<ProductCard product={product} />
+						))}
+					</div>
+				</div>
+
+				<!-- Cart Section -->
+				<div class="lg:col-span-1">
+					<Cart />
+				</div>
+			</div>
+		</div>
+	</div>
 </Layout>
+
+<script>
+	// Category filter functionality
+	document.querySelectorAll('.category-filter').forEach((btn) => {
+		btn.addEventListener('click', (e) => {
+			// Remove active class from all buttons
+			document.querySelectorAll('.category-filter').forEach((b) => {
+				b.classList.remove('bg-blue-500', 'text-white');
+				b.classList.add('bg-white', 'text-gray-700');
+			});
+
+			// Add active class to clicked button
+			(e.target as HTMLElement).classList.add('bg-blue-500', 'text-white');
+			(e.target as HTMLElement).classList.remove('bg-white', 'text-gray-700');
+
+			// Filter products
+			const category = (e.target as HTMLElement).getAttribute('data-category');
+			const productCards = document.querySelectorAll('.product-card');
+
+			productCards.forEach((card) => {
+				const productCategory = (card.closest('[data-category]') as HTMLElement)?.getAttribute('data-category');
+				// For now, show all products. In a real app, you'd filter here
+				card.style.display = 'block';
+			});
+		});
+	});
+</script>

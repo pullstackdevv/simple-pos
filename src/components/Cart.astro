@@ -1,0 +1,199 @@
+---
+---
+
+<div class="cart-container bg-white rounded-lg shadow-lg p-6 h-full flex flex-col">
+  <h2 class="text-2xl font-bold text-gray-800 mb-4">🛒 Keranjang</h2>
+
+  <div class="cart-items flex-1 overflow-y-auto mb-4 space-y-2">
+    <div class="empty-state text-center text-gray-400 py-8">
+      <p class="text-sm">Keranjang kosong</p>
+    </div>
+  </div>
+
+  <div class="cart-summary border-t pt-4 space-y-2">
+    <div class="flex justify-between text-gray-700">
+      <span>Subtotal:</span>
+      <span class="subtotal">Rp 0</span>
+    </div>
+    <div class="flex justify-between text-gray-700">
+      <span>Pajak (10%):</span>
+      <span class="tax">Rp 0</span>
+    </div>
+    <div class="flex justify-between text-xl font-bold text-gray-900 border-t pt-2">
+      <span>Total:</span>
+      <span class="total">Rp 0</span>
+    </div>
+  </div>
+
+  <div class="cart-actions mt-4 space-y-2">
+    <button
+      id="checkout-btn"
+      class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      disabled
+    >
+      Checkout
+    </button>
+    <button
+      id="clear-cart-btn"
+      class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-lg transition-colors"
+    >
+      Hapus Semua
+    </button>
+  </div>
+</div>
+
+<script>
+  interface CartItem {
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+  }
+
+  let cart: CartItem[] = [];
+
+  const loadCart = () => {
+    const saved = localStorage.getItem('pos-cart');
+    cart = saved ? JSON.parse(saved) : [];
+    renderCart();
+  };
+
+  const saveCart = () => {
+    localStorage.setItem('pos-cart', JSON.stringify(cart));
+  };
+
+  const renderCart = () => {
+    const container = document.querySelector('.cart-items') as HTMLElement;
+    
+    if (cart.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state text-center text-gray-400 py-8">
+          <p class="text-sm">Keranjang kosong</p>
+        </div>
+      `;
+    } else {
+      container.innerHTML = cart
+        .map(
+          (item) => `
+        <div class="cart-item bg-gray-50 p-3 rounded flex justify-between items-center">
+          <div class="flex-1">
+            <p class="font-semibold text-gray-800 text-sm">${item.name}</p>
+            <p class="text-xs text-gray-600">Rp ${item.price.toLocaleString('id-ID')}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="qty-decrease bg-gray-300 hover:bg-gray-400 text-gray-800 px-2 py-1 rounded text-xs" data-id="${item.id}">−</button>
+            <span class="qty-display w-6 text-center text-sm font-semibold">${item.quantity}</span>
+            <button class="qty-increase bg-gray-300 hover:bg-gray-400 text-gray-800 px-2 py-1 rounded text-xs" data-id="${item.id}">+</button>
+          </div>
+          <button class="remove-item bg-red-400 hover:bg-red-500 text-white px-2 py-1 rounded text-xs ml-2" data-id="${item.id}">✕</button>
+        </div>
+      `
+        )
+        .join('');
+
+      // Attach event listeners
+      container.querySelectorAll('.qty-increase').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const id = (e.target as HTMLElement).getAttribute('data-id');
+          const item = cart.find((i) => i.id === id);
+          if (item) item.quantity++;
+          saveCart();
+          renderCart();
+          updateSummary();
+        });
+      });
+
+      container.querySelectorAll('.qty-decrease').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const id = (e.target as HTMLElement).getAttribute('data-id');
+          const item = cart.find((i) => i.id === id);
+          if (item && item.quantity > 1) item.quantity--;
+          saveCart();
+          renderCart();
+          updateSummary();
+        });
+      });
+
+      container.querySelectorAll('.remove-item').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const id = (e.target as HTMLElement).getAttribute('data-id');
+          cart = cart.filter((i) => i.id !== id);
+          saveCart();
+          renderCart();
+          updateSummary();
+        });
+      });
+    }
+
+    updateSummary();
+  };
+
+  const updateSummary = () => {
+    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const tax = subtotal * 0.1;
+    const total = subtotal + tax;
+
+    const subtotalEl = document.querySelector('.subtotal') as HTMLElement;
+    const taxEl = document.querySelector('.tax') as HTMLElement;
+    const totalEl = document.querySelector('.total') as HTMLElement;
+    const checkoutBtn = document.getElementById('checkout-btn') as HTMLButtonElement;
+
+    if (subtotalEl) subtotalEl.textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
+    if (taxEl) taxEl.textContent = `Rp ${tax.toLocaleString('id-ID')}`;
+    if (totalEl) totalEl.textContent = `Rp ${total.toLocaleString('id-ID')}`;
+    if (checkoutBtn) checkoutBtn.disabled = cart.length === 0;
+  };
+
+  // Handle add to cart
+  window.addEventListener('addToCart', ((e: CustomEvent) => {
+    const { id, name, price } = e.detail;
+    const existing = cart.find((item) => item.id === id);
+
+    if (existing) {
+      existing.quantity++;
+    } else {
+      cart.push({ id, name, price, quantity: 1 });
+    }
+
+    saveCart();
+    renderCart();
+  }) as EventListener);
+
+  // Clear cart button
+  const clearBtn = document.getElementById('clear-cart-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Hapus semua item dari keranjang?')) {
+        cart = [];
+        saveCart();
+        renderCart();
+      }
+    });
+  }
+
+  // Checkout button
+  const checkoutBtn = document.getElementById('checkout-btn');
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', () => {
+      if (cart.length > 0) {
+        const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const tax = subtotal * 0.1;
+        const total = subtotal + tax;
+
+        const receipt = {
+          items: cart,
+          subtotal,
+          tax,
+          total,
+          timestamp: new Date().toISOString(),
+        };
+
+        localStorage.setItem('pos-receipt', JSON.stringify(receipt));
+        window.location.href = '/receipt';
+      }
+    });
+  }
+
+  // Load cart on page load
+  loadCart();
+</script>
