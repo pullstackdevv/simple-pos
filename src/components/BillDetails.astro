@@ -1,0 +1,280 @@
+---
+---
+
+<div class="w-96 bg-white border-l border-gray-200 h-screen flex flex-col p-6 overflow-y-auto">
+  <!-- Header -->
+  <div class="mb-6 pb-4 border-b border-gray-200">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-xl font-bold text-gray-900">Bill Details</h2>
+      <span class="bill-id text-sm font-semibold text-gray-600">#000001</span>
+    </div>
+    <div class="flex items-center gap-2 text-sm text-gray-600">
+      <span class="current-date"></span>
+    </div>
+  </div>
+
+  <!-- Customer Name -->
+  <div class="mb-6">
+    <label class="block text-sm font-semibold text-gray-700 mb-2">Customer Name</label>
+    <input
+      id="customer-name"
+      type="text"
+      placeholder="Customer Name"
+      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+    />
+  </div>
+
+  <!-- Cart Items -->
+  <div class="cart-items flex-1 overflow-y-auto mb-6 pb-6 border-b border-gray-200 space-y-3">
+    <div class="empty-cart-message text-center text-gray-400 py-8">
+      <p class="text-sm">No items in cart</p>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="space-y-3 mb-6 pb-6 border-b border-gray-200">
+    <div class="flex justify-between text-sm text-gray-700">
+      <span>Items</span>
+      <span class="item-count font-semibold">0</span>
+    </div>
+    <div class="flex justify-between text-sm text-gray-700">
+      <span>Subtotal</span>
+      <span class="subtotal font-semibold">Rp 0</span>
+    </div>
+    <div class="flex justify-between text-sm text-gray-700">
+      <span>Tax (10%)</span>
+      <span class="tax font-semibold">Rp 0</span>
+    </div>
+  </div>
+
+  <!-- Total -->
+  <div class="mb-6 pb-6 border-b border-gray-200">
+    <div class="flex justify-between items-center">
+      <span class="text-gray-900 font-semibold">Total</span>
+      <span class="total text-2xl font-bold text-green-600">Rp 0</span>
+    </div>
+  </div>
+
+  <!-- Select Table -->
+  <div class="mb-6">
+    <label class="block text-sm font-semibold text-gray-700 mb-2">Select Table</label>
+    <input
+      id="table-number"
+      type="number"
+      placeholder="Table Number"
+      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+    />
+  </div>
+
+  <!-- Payment Method -->
+  <div class="mb-6">
+    <label class="block text-sm font-semibold text-gray-700 mb-3">Select Payment</label>
+    <div class="grid grid-cols-2 gap-3">
+      <button
+        class="payment-method flex flex-col items-center gap-2 px-4 py-3 border-2 border-green-500 bg-green-50 rounded-lg transition-colors"
+        data-method="cash"
+      >
+        <span class="text-2xl">💵</span>
+        <span class="text-sm font-semibold text-green-600">Pay with Cash</span>
+      </button>
+      <button
+        class="payment-method flex flex-col items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
+        data-method="card"
+      >
+        <span class="text-2xl">💳</span>
+        <span class="text-sm font-semibold text-gray-700">Pay with Card</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Process Transaction Button -->
+  <button
+    id="process-transaction-btn"
+    class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+    disabled
+  >
+    Process Transaction
+  </button>
+
+  <!-- Clear Cart Button -->
+  <button
+    id="clear-cart-btn"
+    class="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition-colors"
+  >
+    Clear Cart
+  </button>
+</div>
+
+<script>
+  interface CartItem {
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    customization?: Record<string, string>;
+  }
+
+  let cart: CartItem[] = [];
+  let selectedPaymentMethod = 'cash';
+
+  // Set current date
+  const dateEl = document.querySelector('.current-date');
+  if (dateEl) {
+    const now = new Date();
+    dateEl.textContent = now.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  }
+
+  // Payment method selection
+  document.querySelectorAll('.payment-method').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.payment-method').forEach((b) => {
+        b.classList.remove('border-green-500', 'bg-green-50');
+        b.classList.add('border-gray-300');
+        b.querySelector('span:last-child')?.classList.remove('text-green-600');
+        b.querySelector('span:last-child')?.classList.add('text-gray-700');
+      });
+      (e.currentTarget as HTMLElement).classList.add('border-green-500', 'bg-green-50');
+      (e.currentTarget as HTMLElement).classList.remove('border-gray-300');
+      (e.currentTarget as HTMLElement).querySelector('span:last-child')?.classList.add('text-green-600');
+      selectedPaymentMethod = (e.currentTarget as HTMLElement).getAttribute('data-method') || 'cash';
+    });
+  });
+
+  // Add to cart listener
+  window.addEventListener('addToCart', ((e: CustomEvent) => {
+    const { id, name, price, quantity, customization } = e.detail;
+    const cartItem: CartItem = { id, name, price, quantity, customization };
+    cart.push(cartItem);
+    updateCart();
+  }) as EventListener);
+
+  // Update cart display
+  function updateCart() {
+    const cartItemsEl = document.querySelector('.cart-items') as HTMLElement;
+    const itemCountEl = document.querySelector('.item-count') as HTMLElement;
+    const subtotalEl = document.querySelector('.subtotal') as HTMLElement;
+    const taxEl = document.querySelector('.tax') as HTMLElement;
+    const totalEl = document.querySelector('.total') as HTMLElement;
+    const processBtn = document.getElementById('process-transaction-btn') as HTMLButtonElement;
+
+    if (cart.length === 0) {
+      cartItemsEl.innerHTML = '<div class="empty-cart-message text-center text-gray-400 py-8"><p class="text-sm">No items in cart</p></div>';
+      itemCountEl.textContent = '0';
+      subtotalEl.textContent = 'Rp 0';
+      taxEl.textContent = 'Rp 0';
+      totalEl.textContent = 'Rp 0';
+      processBtn.disabled = true;
+      return;
+    }
+
+    // Render cart items
+    cartItemsEl.innerHTML = cart
+      .map(
+        (item, idx) => `
+      <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+        <div class="flex justify-between items-start mb-2">
+          <div class="flex-1">
+            <p class="font-bold text-gray-900 text-sm">${item.name}</p>
+            <p class="text-xs text-gray-600">${item.quantity}x @ Rp ${item.price.toLocaleString('id-ID')}</p>
+          </div>
+          <button class="remove-item text-red-500 hover:text-red-700 transition-colors" data-index="${idx}">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+        <p class="font-bold text-gray-900">Rp ${(item.price * item.quantity).toLocaleString('id-ID')}</p>
+      </div>
+    `
+      )
+      .join('');
+
+    // Attach remove listeners
+    cartItemsEl.querySelectorAll('.remove-item').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt((e.target as HTMLElement).getAttribute('data-index') || '0');
+        cart.splice(idx, 1);
+        updateCart();
+      });
+    });
+
+    // Calculate totals
+    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const tax = subtotal * 0.1;
+    const total = subtotal + tax;
+    const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    itemCountEl.textContent = itemCount.toString();
+    subtotalEl.textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
+    taxEl.textContent = `Rp ${tax.toLocaleString('id-ID')}`;
+    totalEl.textContent = `Rp ${total.toLocaleString('id-ID')}`;
+    processBtn.disabled = false;
+  }
+
+  // Process transaction
+  const processBtn = document.getElementById('process-transaction-btn');
+  if (processBtn) {
+    processBtn.addEventListener('click', async () => {
+      const customerName = (document.getElementById('customer-name') as HTMLInputElement).value;
+      const tableNumber = (document.getElementById('table-number') as HTMLInputElement).value;
+
+      if (cart.length === 0) {
+        alert('Cart is empty');
+        return;
+      }
+
+      const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const tax = subtotal * 0.1;
+      const total = subtotal + tax;
+
+      try {
+        const response = await fetch('/api/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customer_name: customerName,
+            items: cart.map((item) => ({
+              product_id: item.id,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+            subtotal,
+            tax,
+            total,
+            payment_method: selectedPaymentMethod,
+            table_number: tableNumber ? parseInt(tableNumber) : null,
+          }),
+        });
+
+        if (response.ok) {
+          alert('Transaction saved successfully!');
+          cart = [];
+          (document.getElementById('customer-name') as HTMLInputElement).value = '';
+          (document.getElementById('table-number') as HTMLInputElement).value = '';
+          updateCart();
+        } else {
+          alert('Failed to save transaction');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error saving transaction');
+      }
+    });
+  }
+
+  // Clear cart
+  const clearBtn = document.getElementById('clear-cart-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Clear all items?')) {
+        cart = [];
+        updateCart();
+      }
+    });
+  }
+</script>

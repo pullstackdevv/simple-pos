@@ -17,14 +17,31 @@ const formatPrice = (price: number) => {
 ---
 
 <button
-  class="product-card bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 cursor-pointer border border-gray-200 hover:border-blue-400"
+  class="product-card group relative bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 p-5 cursor-pointer border border-gray-100 hover:border-blue-300 overflow-hidden"
   data-product-id={product.id}
   data-product-name={product.name}
   data-product-price={product.price}
 >
-  <div class="text-4xl mb-3">{product.image}</div>
-  <h3 class="font-semibold text-gray-800 text-sm mb-2">{product.name}</h3>
-  <p class="text-blue-600 font-bold text-lg">{formatPrice(product.price)}</p>
+  <!-- Background gradient on hover -->
+  <div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+  
+  <div class="relative z-10">
+    <!-- Product Image/Icon -->
+    <div class="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300 inline-block">{product.image}</div>
+    
+    <!-- Product Name -->
+    <h3 class="font-bold text-gray-800 text-sm mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">{product.name}</h3>
+    
+    <!-- Price -->
+    <div class="flex items-center justify-between">
+      <p class="text-blue-600 font-bold text-lg">{formatPrice(product.price)}</p>
+      <div class="bg-blue-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+      </div>
+    </div>
+  </div>
 </button>
 
 <script>
@@ -40,6 +57,10 @@ const formatPrice = (price: number) => {
           detail: { id: productId, name: productName, price: productPrice },
         })
       );
+
+      // Add animation feedback
+      card.classList.add('scale-95');
+      setTimeout(() => card.classList.remove('scale-95'), 150);
     });
   });
 </script>

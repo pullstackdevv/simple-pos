@@ -1,0 +1,75 @@
+---
+import type { Product } from '../data/products';
+import ProductModal from './ProductModal.astro';
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(price);
+};
+---
+
+<div class="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+  <!-- Product Image -->
+  <div class="bg-gray-200 h-40 flex items-center justify-center text-5xl cursor-pointer hover:bg-gray-300 transition-colors open-product-modal" data-product-id={product.id}>
+    {product.image}
+  </div>
+
+  <!-- Product Info -->
+  <div class="p-4">
+    <h3 class="font-bold text-gray-900 mb-1 line-clamp-2 cursor-pointer hover:text-green-600 transition-colors open-product-modal" data-product-id={product.id}>
+      {product.name}
+    </h3>
+    <p class="text-xs text-gray-600 mb-3">
+      {product.available !== undefined && product.available > 0 ? (
+        <>
+          <span>{product.available} Available</span>
+          {product.sold && <span> • {product.sold} Sold</span>}
+        </>
+      ) : (
+        <span class="text-red-600 font-semibold">Out of Stock</span>
+      )}
+    </p>
+
+    <div class="mb-4">
+      <p class="text-lg font-bold text-gray-900">{formatPrice(product.price)}</p>
+    </div>
+
+    <!-- Add to Cart Button -->
+    <button
+      class={`w-full py-3 rounded-lg font-bold transition-all duration-300 open-product-modal ${
+        product.available === 0
+          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          : 'bg-green-500 hover:bg-green-600 text-white'
+      }`}
+      data-product-id={product.id}
+      disabled={product.available === 0}
+    >
+      Add to Cart
+    </button>
+  </div>
+</div>
+
+<!-- Product Modal -->
+<ProductModal product={product} />
+
+<script>
+  // Open modal when clicking product
+  document.querySelectorAll('.open-product-modal').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const productId = (e.target as HTMLElement).getAttribute('data-product-id');
+      const modal = document.getElementById(`modal-${productId}`);
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
+    });
+  });
+</script>

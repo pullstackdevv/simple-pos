@@ -1,0 +1,283 @@
+---
+import type { Product } from '../data/products';
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(price);
+};
+---
+
+<div id={`modal-${product.id}`} class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <!-- Header -->
+    <div class="sticky top-0 bg-white border-b border-gray-200 p-6">
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">{product.name}</h2>
+          <p class="text-lg font-bold text-green-600 mt-2">{formatPrice(product.price)}</p>
+        </div>
+        <button
+          class="close-modal text-gray-400 hover:text-gray-600 transition-colors"
+          data-product-id={product.id}
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="p-6 space-y-6">
+      <!-- Product Image -->
+      <div class="bg-gray-100 rounded-lg h-40 flex items-center justify-center text-6xl">
+        {product.image}
+      </div>
+
+      <!-- Customization Options -->
+      {product.customizable && (
+        <div class="space-y-4">
+          <!-- Cup Size -->
+          {product.options?.cupSize && (
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-3">Cup Size</label>
+              <div class="flex gap-2">
+                {product.options.cupSize.map((size) => (
+                  <button
+                    class="cup-size-btn flex-1 py-2 px-3 rounded-lg border-2 border-gray-300 hover:border-green-500 font-semibold text-gray-700 transition-all"
+                    data-size={size}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- Ice Level -->
+          {product.options?.iceLevel && (
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-3">Ice Level</label>
+              <div class="flex gap-2">
+                {product.options.iceLevel.map((level) => (
+                  <button
+                    class="ice-level-btn flex-1 py-2 px-3 rounded-lg border-2 border-gray-300 hover:border-green-500 font-semibold text-gray-700 transition-all"
+                    data-level={level}
+                  >
+                    {level}%
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- Sugar Level -->
+          {product.options?.sugarLevel && (
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-3">Sugar Level</label>
+              <div class="flex gap-2">
+                {product.options.sugarLevel.map((level) => (
+                  <button
+                    class="sugar-level-btn flex-1 py-2 px-3 rounded-lg border-2 border-gray-300 hover:border-green-500 font-semibold text-gray-700 transition-all"
+                    data-level={level}
+                  >
+                    {level}%
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- Topping -->
+          {product.options?.topping && (
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-3">Topping</label>
+              <select class="topping-select w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500">
+                <option value="">Select Topping</option>
+                {product.options.topping.map((top) => (
+                  <option value={top}>{top}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      )}
+
+      <!-- Quantity -->
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-3">Quantity</label>
+        <div class="flex items-center gap-3 bg-gray-100 rounded-lg p-2">
+          <button class="qty-decrease w-10 h-10 flex items-center justify-center bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-bold text-lg">
+            −
+          </button>
+          <span class="qty-display flex-1 text-center font-bold text-lg">1</span>
+          <button class="qty-increase w-10 h-10 flex items-center justify-center bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-bold text-lg">
+            +
+          </button>
+        </div>
+      </div>
+
+      <!-- Total Price -->
+      <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+        <p class="text-sm text-gray-600 mb-1">Total Price</p>
+        <p class="total-price text-2xl font-bold text-green-600">{formatPrice(product.price)}</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="sticky bottom-0 bg-white border-t border-gray-200 p-6 space-y-2">
+      <button
+        class="add-to-cart-btn w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+        data-product-id={product.id}
+        data-product-name={product.name}
+        data-product-price={product.price}
+      >
+        Add to Cart
+      </button>
+      <button
+        class="close-modal w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition-colors"
+        data-product-id={product.id}
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById(`modal-${import.meta.env.PUBLIC_PRODUCT_ID || ''}`);
+  
+  // Get modal by product ID from data attribute
+  const productId = document.querySelector('[data-product-id]')?.getAttribute('data-product-id');
+  const productModal = document.getElementById(`modal-${productId}`);
+
+  if (productModal) {
+    let selectedCustomization = {
+      cupSize: '',
+      iceLevel: '',
+      sugarLevel: '',
+      topping: '',
+    };
+    let quantity = 1;
+
+    // Cup size selection
+    productModal.querySelectorAll('.cup-size-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        productModal.querySelectorAll('.cup-size-btn').forEach((b) => {
+          b.classList.remove('border-green-500', 'bg-green-50');
+          b.classList.add('border-gray-300');
+        });
+        (e.target as HTMLElement).classList.add('border-green-500', 'bg-green-50');
+        (e.target as HTMLElement).classList.remove('border-gray-300');
+        selectedCustomization.cupSize = (e.target as HTMLElement).getAttribute('data-size') || '';
+      });
+    });
+
+    // Ice level selection
+    productModal.querySelectorAll('.ice-level-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        productModal.querySelectorAll('.ice-level-btn').forEach((b) => {
+          b.classList.remove('border-green-500', 'bg-green-50');
+          b.classList.add('border-gray-300');
+        });
+        (e.target as HTMLElement).classList.add('border-green-500', 'bg-green-50');
+        (e.target as HTMLElement).classList.remove('border-gray-300');
+        selectedCustomization.iceLevel = (e.target as HTMLElement).getAttribute('data-level') || '';
+      });
+    });
+
+    // Sugar level selection
+    productModal.querySelectorAll('.sugar-level-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        productModal.querySelectorAll('.sugar-level-btn').forEach((b) => {
+          b.classList.remove('border-green-500', 'bg-green-50');
+          b.classList.add('border-gray-300');
+        });
+        (e.target as HTMLElement).classList.add('border-green-500', 'bg-green-50');
+        (e.target as HTMLElement).classList.remove('border-gray-300');
+        selectedCustomization.sugarLevel = (e.target as HTMLElement).getAttribute('data-level') || '';
+      });
+    });
+
+    // Topping selection
+    const toppingSelect = productModal.querySelector('.topping-select') as HTMLSelectElement;
+    if (toppingSelect) {
+      toppingSelect.addEventListener('change', (e) => {
+        selectedCustomization.topping = (e.target as HTMLSelectElement).value;
+      });
+    }
+
+    // Quantity controls
+    const qtyDisplay = productModal.querySelector('.qty-display') as HTMLElement;
+    const totalPrice = productModal.querySelector('.total-price') as HTMLElement;
+    const productPrice = parseFloat(
+      (productModal.querySelector('[data-product-price]') as HTMLElement)?.getAttribute('data-product-price') || '0'
+    );
+
+    productModal.querySelector('.qty-decrease')?.addEventListener('click', () => {
+      if (quantity > 1) {
+        quantity--;
+        qtyDisplay.textContent = quantity.toString();
+        updateTotalPrice();
+      }
+    });
+
+    productModal.querySelector('.qty-increase')?.addEventListener('click', () => {
+      quantity++;
+      qtyDisplay.textContent = quantity.toString();
+      updateTotalPrice();
+    });
+
+    function updateTotalPrice() {
+      const total = productPrice * quantity;
+      if (totalPrice) {
+        totalPrice.textContent = new Intl.NumberFormat('id-ID', {
+          style: 'currency',
+          currency: 'IDR',
+          minimumFractionDigits: 0,
+        }).format(total);
+      }
+    }
+
+    // Add to cart
+    productModal.querySelector('.add-to-cart-btn')?.addEventListener('click', () => {
+      const productId = (productModal.querySelector('[data-product-id]') as HTMLElement)?.getAttribute('data-product-id');
+      const productName = (productModal.querySelector('[data-product-name]') as HTMLElement)?.getAttribute('data-product-name');
+
+      window.dispatchEvent(
+        new CustomEvent('addToCart', {
+          detail: {
+            id: productId,
+            name: productName,
+            price: productPrice,
+            quantity,
+            customization: selectedCustomization,
+          },
+        })
+      );
+
+      // Close modal
+      productModal.classList.add('hidden');
+      quantity = 1;
+      selectedCustomization = { cupSize: '', iceLevel: '', sugarLevel: '', topping: '' };
+    });
+
+    // Close modal
+    productModal.querySelectorAll('.close-modal').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        productModal.classList.add('hidden');
+        quantity = 1;
+        selectedCustomization = { cupSize: '', iceLevel: '', sugarLevel: '', topping: '' };
+      });
+    });
+  }
+</script>

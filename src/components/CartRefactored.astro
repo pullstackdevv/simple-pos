@@ -1,0 +1,236 @@
+---
+---
+
+<div class="cart-container bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-2xl p-6 h-full flex flex-col border border-gray-100">
+  <!-- Header -->
+  <div class="mb-6 pb-4 border-b border-gray-200">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">🛒 Keranjang</h2>
+        <p class="text-xs text-gray-500 mt-1">Pesanan Anda</p>
+      </div>
+      <div class="bg-blue-100 text-blue-600 rounded-full w-10 h-10 flex items-center justify-center font-bold text-sm cart-count">0</div>
+    </div>
+  </div>
+
+  <!-- Cart Items -->
+  <div class="cart-items flex-1 overflow-y-auto mb-4 space-y-2">
+    <div class="empty-state text-center text-gray-400 py-12">
+      <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+      </svg>
+      <p class="text-sm font-medium">Keranjang kosong</p>
+      <p class="text-xs mt-1">Tambahkan produk untuk memulai</p>
+    </div>
+  </div>
+
+  <!-- Cart Summary -->
+  <div class="cart-summary space-y-3 bg-white rounded-xl p-4 border border-gray-100 mb-4">
+    <div class="flex justify-between text-sm text-gray-600">
+      <span>Subtotal:</span>
+      <span class="subtotal font-semibold text-gray-900">Rp 0</span>
+    </div>
+    <div class="flex justify-between text-sm text-gray-600">
+      <span>Pajak (10%):</span>
+      <span class="tax font-semibold text-gray-900">Rp 0</span>
+    </div>
+    <div class="border-t border-gray-200 pt-3 flex justify-between text-lg font-bold text-gray-900">
+      <span>Total:</span>
+      <span class="total text-blue-600">Rp 0</span>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="cart-actions space-y-2">
+    <button
+      id="checkout-btn"
+      class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
+      disabled
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+      Checkout
+    </button>
+    <button
+      id="clear-cart-btn"
+      class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-xl transition-colors duration-300 flex items-center justify-center gap-2"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+      </svg>
+      Hapus Semua
+    </button>
+  </div>
+</div>
+
+<script>
+  interface CartItem {
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+  }
+
+  let cart: CartItem[] = [];
+
+  const loadCart = () => {
+    const saved = localStorage.getItem('pos-cart');
+    cart = saved ? JSON.parse(saved) : [];
+    renderCart();
+  };
+
+  const saveCart = () => {
+    localStorage.setItem('pos-cart', JSON.stringify(cart));
+  };
+
+  const renderCart = () => {
+    const container = document.querySelector('.cart-items') as HTMLElement;
+    const countBadge = document.querySelector('.cart-count') as HTMLElement;
+    
+    if (countBadge) {
+      countBadge.textContent = cart.reduce((sum, item) => sum + item.quantity, 0).toString();
+    }
+    
+    if (cart.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state text-center text-gray-400 py-12">
+          <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+          </svg>
+          <p class="text-sm font-medium">Keranjang kosong</p>
+          <p class="text-xs mt-1">Tambahkan produk untuk memulai</p>
+        </div>
+      `;
+    } else {
+      container.innerHTML = cart
+        .map(
+          (item) => `
+        <div class="cart-item bg-white rounded-lg p-3 border border-gray-100 hover:border-blue-200 transition-colors">
+          <div class="flex justify-between items-start mb-2">
+            <div class="flex-1">
+              <p class="font-semibold text-gray-800 text-sm">${item.name}</p>
+              <p class="text-xs text-gray-500">Rp ${item.price.toLocaleString('id-ID')}</p>
+            </div>
+            <button class="remove-item text-gray-400 hover:text-red-500 transition-colors" data-id="${item.id}">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+            <button class="qty-decrease text-gray-600 hover:text-gray-800 font-bold" data-id="${item.id}">−</button>
+            <span class="qty-display w-8 text-center text-sm font-semibold">${item.quantity}</span>
+            <button class="qty-increase text-gray-600 hover:text-gray-800 font-bold" data-id="${item.id}">+</button>
+          </div>
+        </div>
+      `
+        )
+        .join('');
+
+      // Attach event listeners
+      container.querySelectorAll('.qty-increase').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const id = (e.target as HTMLElement).getAttribute('data-id');
+          const item = cart.find((i) => i.id === id);
+          if (item) item.quantity++;
+          saveCart();
+          renderCart();
+          updateSummary();
+        });
+      });
+
+      container.querySelectorAll('.qty-decrease').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const id = (e.target as HTMLElement).getAttribute('data-id');
+          const item = cart.find((i) => i.id === id);
+          if (item && item.quantity > 1) item.quantity--;
+          saveCart();
+          renderCart();
+          updateSummary();
+        });
+      });
+
+      container.querySelectorAll('.remove-item').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const id = (e.target as HTMLElement).getAttribute('data-id');
+          cart = cart.filter((i) => i.id !== id);
+          saveCart();
+          renderCart();
+          updateSummary();
+        });
+      });
+    }
+
+    updateSummary();
+  };
+
+  const updateSummary = () => {
+    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const tax = subtotal * 0.1;
+    const total = subtotal + tax;
+
+    const subtotalEl = document.querySelector('.subtotal') as HTMLElement;
+    const taxEl = document.querySelector('.tax') as HTMLElement;
+    const totalEl = document.querySelector('.total') as HTMLElement;
+    const checkoutBtn = document.getElementById('checkout-btn') as HTMLButtonElement;
+
+    if (subtotalEl) subtotalEl.textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
+    if (taxEl) taxEl.textContent = `Rp ${tax.toLocaleString('id-ID')}`;
+    if (totalEl) totalEl.textContent = `Rp ${total.toLocaleString('id-ID')}`;
+    if (checkoutBtn) checkoutBtn.disabled = cart.length === 0;
+  };
+
+  // Handle add to cart
+  window.addEventListener('addToCart', ((e: CustomEvent) => {
+    const { id, name, price } = e.detail;
+    const existing = cart.find((item) => item.id === id);
+
+    if (existing) {
+      existing.quantity++;
+    } else {
+      cart.push({ id, name, price, quantity: 1 });
+    }
+
+    saveCart();
+    renderCart();
+  }) as EventListener);
+
+  // Clear cart button
+  const clearBtn = document.getElementById('clear-cart-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Hapus semua item dari keranjang?')) {
+        cart = [];
+        saveCart();
+        renderCart();
+      }
+    });
+  }
+
+  // Checkout button
+  const checkoutBtn = document.getElementById('checkout-btn');
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', () => {
+      if (cart.length > 0) {
+        const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const tax = subtotal * 0.1;
+        const total = subtotal + tax;
+
+        const receipt = {
+          items: cart,
+          subtotal,
+          tax,
+          total,
+          timestamp: new Date().toISOString(),
+        };
+
+        localStorage.setItem('pos-receipt', JSON.stringify(receipt));
+        window.location.href = '/receipt';
+      }
+    });
+  }
+
+  // Load cart on page load
+  loadCart();
+</script>

@@ -1,50 +1,72 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import ProductCard from '../components/ProductCard.astro';
-import Cart from '../components/Cart.astro';
+import Sidebar from '../components/Sidebar.astro';
+import ProductCardNew from '../components/ProductCardNew.astro';
+import BillDetails from '../components/BillDetails.astro';
 import { products, categories } from '../data/products';
 ---
 
 <Layout>
-	<div class="min-h-screen bg-gray-100 p-4">
-		<div class="max-w-7xl mx-auto">
-			<!-- Header -->
-			<div class="mb-8">
-				<h1 class="text-4xl font-bold text-gray-900 mb-2">☕ Simple POS</h1>
-				<p class="text-gray-600">Sistem Kasir Sederhana</p>
+	<div class="flex h-screen bg-gray-50">
+		<!-- Sidebar -->
+		<Sidebar />
+
+		<!-- Main Content -->
+		<div class="flex-1 flex flex-col overflow-hidden">
+			<!-- Top Bar -->
+			<div class="bg-white border-b border-gray-200 px-8 py-4">
+				<div class="flex items-center justify-between">
+					<div class="flex-1">
+						<div class="relative max-w-md">
+							<svg class="absolute left-3 top-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+							</svg>
+							<input
+								type="text"
+								placeholder="Search menu"
+								class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+							/>
+						</div>
+					</div>
+				</div>
 			</div>
 
-			<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+			<!-- Content Area -->
+			<div class="flex-1 flex overflow-hidden">
 				<!-- Products Section -->
-				<div class="lg:col-span-2">
-					<!-- Category Filter -->
-					<div class="mb-6 flex gap-2 overflow-x-auto pb-2">
-						{categories.map((cat) => (
-							<button
-								class={`category-filter px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
-									cat === 'All'
-										? 'bg-blue-500 text-white'
-										: 'bg-white text-gray-700 hover:bg-gray-100'
-								}`}
-								data-category={cat}
-							>
-								{cat}
-							</button>
-						))}
+				<div class="flex-1 overflow-y-auto px-8 py-6">
+					<!-- Categories -->
+					<div class="mb-8">
+						<h2 class="text-lg font-bold text-gray-900 mb-4">Categories</h2>
+						<div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+							{categories.map((cat, idx) => (
+								<button
+									class={`category-filter px-6 py-2 rounded-2xl font-semibold whitespace-nowrap transition-all duration-300 ${
+										idx === 0
+											? 'bg-green-100 text-green-600 border-2 border-green-500'
+											: 'bg-white text-gray-700 border border-gray-300 hover:border-green-500'
+									}`}
+									data-category={cat}
+								>
+									{cat === 'All Menu' ? '🍽️' : ''} {cat}
+								</button>
+							))}
+						</div>
 					</div>
+
+					<!-- Select Menu Title -->
+					<h2 class="text-lg font-bold text-gray-900 mb-4">Select Menu</h2>
 
 					<!-- Products Grid -->
-					<div class="products-grid grid grid-cols-2 sm:grid-cols-3 gap-4">
+					<div class="grid grid-cols-2 gap-4">
 						{products.map((product) => (
-							<ProductCard product={product} />
+							<ProductCardNew product={product} />
 						))}
 					</div>
 				</div>
 
-				<!-- Cart Section -->
-				<div class="lg:col-span-1">
-					<Cart />
-				</div>
+				<!-- Bill Details Section -->
+				<BillDetails />
 			</div>
 		</div>
 	</div>
@@ -56,23 +78,24 @@ import { products, categories } from '../data/products';
 		btn.addEventListener('click', (e) => {
 			// Remove active class from all buttons
 			document.querySelectorAll('.category-filter').forEach((b) => {
-				b.classList.remove('bg-blue-500', 'text-white');
-				b.classList.add('bg-white', 'text-gray-700');
+				b.classList.remove('bg-green-100', 'text-green-600', 'border-green-500');
+				b.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
 			});
 
 			// Add active class to clicked button
-			(e.target as HTMLElement).classList.add('bg-blue-500', 'text-white');
-			(e.target as HTMLElement).classList.remove('bg-white', 'text-gray-700');
-
-			// Filter products
-			const category = (e.target as HTMLElement).getAttribute('data-category');
-			const productCards = document.querySelectorAll('.product-card');
-
-			productCards.forEach((card) => {
-				const productCategory = (card.closest('[data-category]') as HTMLElement)?.getAttribute('data-category');
-				// For now, show all products. In a real app, you'd filter here
-				card.style.display = 'block';
-			});
+			const target = e.target as HTMLElement;
+			target.classList.add('bg-green-100', 'text-green-600', 'border-2', 'border-green-500');
+			target.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
 		});
 	});
 </script>
+
+<style>
+	.scrollbar-hide {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+	.scrollbar-hide::-webkit-scrollbar {
+		display: none;
+	}
+</style>
