@@ -1,6 +1,12 @@
 import type { APIRoute } from 'astro';
 import { query } from '../../../lib/db';
 
+// For static build, provide empty getStaticPaths
+// API routes work in dev mode without this
+export async function getStaticPaths() {
+  return [];
+}
+
 // GET product by ID
 export const GET: APIRoute = async ({ params }) => {
   try {

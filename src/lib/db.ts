@@ -1,4 +1,5 @@
 import mysql from 'mysql2/promise';
+import type { ResultSetHeader } from 'mysql2';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -14,12 +15,12 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-export async function query(sql: string, values?: any[]) {
+export async function query(sql: string, values?: any[]): Promise<any> {
   try {
     const connection = await pool.getConnection();
     const [results] = await connection.execute(sql, values || []);
     connection.release();
-    return results;
+    return results as ResultSetHeader | any[];
   } catch (error) {
     console.error('Database query error:', error);
     throw error;
