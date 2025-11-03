@@ -34,7 +34,13 @@ export const POST: APIRoute = async ({ request }) => {
       tax,
       total,
       payment_method,
-    ]);
+    ]) as any;
+
+    const transactionId = transactionResult?.insertId || transactionResult?.[0]?.insertId;
+
+    if (!transactionId) {
+      throw new Error('Failed to get transaction ID');
+    }
 
     // Insert transaction items
     if (items && Array.isArray(items)) {
@@ -43,14 +49,14 @@ export const POST: APIRoute = async ({ request }) => {
           INSERT INTO transaction_items (transaction_id, product_id, quantity, price)
           VALUES (?, ?, ?, ?)
         `;
-        await query(itemSql, [transactionResult.insertId, item.product_id, item.quantity, item.price]);
+        await query(itemSql, [transactionId, item.product_id, item.quantity, item.price]);
       }
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        transaction_id: transactionResult.insertId,
+        transaction_id: transactionId,
         message: 'Transaction created successfully',
       }),
       {

@@ -233,13 +233,16 @@
       const total = subtotal + tax;
 
       try {
+        processBtn.disabled = true;
+        processBtn.textContent = 'Processing...';
+
         const response = await fetch('/api/transactions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            customer_name: customerName,
+            customer_name: customerName || 'Walk-in Customer',
             items: cart.map((item) => ({
-              product_id: item.id,
+              product_id: parseInt(item.id),
               quantity: item.quantity,
               price: item.price,
             })),
@@ -251,18 +254,23 @@
           }),
         });
 
-        if (response.ok) {
-          alert('Transaction saved successfully!');
+        const responseData = await response.json();
+
+        if (response.ok && responseData.success) {
+          alert(`✅ Transaction #${responseData.transaction_id} saved successfully!`);
           cart = [];
           (document.getElementById('customer-name') as HTMLInputElement).value = '';
           (document.getElementById('table-number') as HTMLInputElement).value = '';
           updateCart();
         } else {
-          alert('Failed to save transaction');
+          alert(`❌ Failed to save transaction: ${responseData.error || 'Unknown error'}`);
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('Error saving transaction');
+        alert(`❌ Error saving transaction: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      } finally {
+        processBtn.disabled = false;
+        processBtn.textContent = 'Process Transaction';
       }
     });
   }

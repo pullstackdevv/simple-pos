@@ -3,7 +3,20 @@ import Layout from '../layouts/Layout.astro';
 import Sidebar from '../components/Sidebar.astro';
 import ProductCardNew from '../components/ProductCardNew.astro';
 import BillDetails from '../components/BillDetails.astro';
-import { products, categories } from '../data/products';
+import { categories } from '../data/products';
+
+// Fetch products from database API
+let products = [];
+try {
+  const response = await fetch('http://localhost:4322/api/products');
+  if (response.ok) {
+    products = await response.json();
+  }
+} catch (error) {
+  console.error('Failed to fetch products:', error);
+  // Fallback to empty array if API fails
+  products = [];
+}
 ---
 
 <Layout>
